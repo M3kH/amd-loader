@@ -49,10 +49,10 @@ define(function() {
         else {
           path += queryString;
         }
-      
+
 
         var self = this;
-        
+
         loader.fetch(path, function(source) {
           compile(name, source, req, function(compiled) {
             if (typeof compiled == 'string') {
@@ -74,13 +74,18 @@ define(function() {
         write.asModule(pluginName + '!' + name, req.toUrl(name + '.' + pluginId + '.js'), this.buildCache[name]);
       }
     };
-  }
+  };
 
   //loader.load = function(name, req, load, config) {
   //  load(loader);
   //}
-
-  if (typeof window != 'undefined') {
+   if (typeof process !== 'undefined' && process.versions && !!process.versions.node) {
+    var fs = requirejs.nodeRequire('fs');
+    loader.fetch = function(path, callback) {
+      callback(fs.readFileSync(path, 'utf8'));
+    };
+  }
+  else if (typeof window != 'undefined') {
     var progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'];
     var getXhr = function(path) {
       // check if same domain
@@ -102,7 +107,7 @@ define(function() {
           progId = progIds[i];
           try {
             xhr = new ActiveXObject(progId);
-          } 
+          }
           catch (e) {}
 
           if (xhr) {
@@ -129,7 +134,7 @@ define(function() {
     loader.fetch = function (url, callback, errback) {
       // get the xhr with CORS enabled if cross domain
       var xhr = getXhr(url);
-      
+
       xhr.open('GET', url, !requirejs.inlineRequire);
       xhr.onreadystatechange = function(evt) {
         var status, err;
@@ -151,13 +156,7 @@ define(function() {
         }
       };
       xhr.send(null);
-    }
-  }
-  else if (typeof process !== 'undefined' && process.versions && !!process.versions.node) {
-    var fs = requirejs.nodeRequire('fs');
-    loader.fetch = function(path, callback) {
-      callback(fs.readFileSync(path, 'utf8'));
-    }
+    };
   }
   else if (typeof Packages !== 'undefined') {
     loader.fetch = function(path, callback, errback) {
@@ -191,7 +190,7 @@ define(function() {
         }
         //Make sure we return a JavaScript string and not a Java string.
         content = String(stringBuffer.toString()); //String
-      } 
+      }
       catch(err) {
         if (errback)
           errback(err);
@@ -200,12 +199,12 @@ define(function() {
         input.close();
       }
       callback(content);
-    }
+    };
   }
   else {
     loader.fetch = function() {
       throw new Error('Environment unsupported.');
-    }
+    };
   }
 
   return loader;
