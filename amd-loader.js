@@ -79,13 +79,8 @@ define(function() {
   //loader.load = function(name, req, load, config) {
   //  load(loader);
   //}
-   if (typeof process !== 'undefined' && process.versions && !!process.versions.node) {
-    var fs = requirejs.nodeRequire('fs');
-    loader.fetch = function(path, callback) {
-      callback(fs.readFileSync(path, 'utf8'));
-    };
-  }
-  else if (typeof window != 'undefined') {
+  // fix proposed - The file could be emebended in node~js enviroment with jsdom enable, but Ajax request disabled. So this is a better check.
+   if (typeof window != 'undefined' && (typeof XMLHttpRequest != "undefined" || typeof XDomainRequest != 'undefined' ) ) {
     var progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'];
     var getXhr = function(path) {
       // check if same domain
@@ -157,8 +152,14 @@ define(function() {
       };
       xhr.send(null);
     };
-  }
-  else if (typeof Packages !== 'undefined') {
+  }else
+  if (typeof process !== 'undefined' && process.versions && !!process.versions.node) {
+    var fs = requirejs.nodeRequire('fs');
+    loader.fetch = function(path, callback) {
+      callback(fs.readFileSync(path, 'utf8'));
+    };
+  }else
+  if (typeof Packages !== 'undefined') {
     loader.fetch = function(path, callback, errback) {
       var stringBuffer, line,
         encoding = 'utf-8',
